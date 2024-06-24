@@ -258,6 +258,7 @@ function nextLevel() {
     }
     else{
         alert('Game completed')
+        currentLevel = 1;
     }
     
 
@@ -347,7 +348,7 @@ canvas.addEventListener('mouseup', (e) => {
         // Adjust the multiplier (0.1) to control the velocity based on dragging distance
         const velocityMultiplier = 0.1 + distance * 0.001; // Increase velocity with dragging distance
 
-        
+
         // Calculate the velocity components based on the distance dragged
         const velX = distanceX * velocityMultiplier;
         const velY = distanceY * velocityMultiplier;
