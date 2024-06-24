@@ -29,11 +29,13 @@ const loadedBirdImages = birdImages.map(src => {
 const starImage = new Image();
 starImage.src = './images/star.png'; // Replace with the path to your star image
 
+let currentLevel = 1; // Initial level
+
 function createBird() {
     const bird = {
         x: birdStartPosition.x,
         y: birdStartPosition.y,
-        radius: 25,
+        width: 25,
         image: loadedBirdImages[Math.floor(Math.random() * loadedBirdImages.length)], // Assign a random bird image
         vx: 0,
         vy: 0,
@@ -58,15 +60,55 @@ let targets = [
 let stars = [
     { x: 1400, y: 450, width: 30, height: 30, opacity: 1, fadeStarted: false },
     { x: 1350, y: 250, width: 30, height: 30, opacity: 1, fadeStarted: false },
-    { x: 1450, y: 300, width: 30, height: 30, opacity: 1, fadeStarted: false }
+    { x: 1250, y: 300, width: 30, height: 30, opacity: 1, fadeStarted: false }
 ];
+
+// Generate random positions with x-axis > 1000
+function getRandomPosition(objectWidth, objectHeight) {
+    return {
+        x: 1000 + Math.random() * (canvas.width - 1000 - objectWidth),
+        y: Math.random() * (canvas.height - objectHeight)
+    };
+}
+
+function generateTargets(level) {
+    const targetColors = ['green', 'blue', 'yellow', 'orange'];
+    let newTargets = [];
+    for (let i = 0; i < level + 3; i++) { // Increment the number of targets based on the level
+        newTargets.push({
+            ...getRandomPosition(50, 50),
+            width: 50,
+            height: 50,
+            color: targetColors[i % targetColors.length],
+            vx: 0,
+            vy: 0,
+            mass: 1,
+            isFalling: false
+        });
+    }
+    return newTargets;
+}
+
+function generateStars(level) {
+    let newStars = [];
+    for (let i = 0; i < level + 2; i++) { // Increment the number of stars based on the level
+        newStars.push({
+            ...getRandomPosition(30, 30),
+            width: 30,
+            height: 30,
+            opacity: 1,
+            fadeStarted: false
+        });
+    }
+    return newStars;
+}
 
 const sling = { startX: birdStartPosition.x, startY: birdStartPosition.y, endX: birdStartPosition.x, endY: birdStartPosition.y, color: 'black' };
 
 function drawBird(bird) {
     ctx.save();
     ctx.globalAlpha = bird.opacity;
-    ctx.drawImage(bird.image, bird.x - bird.radius, bird.y - bird.radius, bird.radius * 2, bird.radius * 2);
+    ctx.drawImage(bird.image, bird.x - bird.width, bird.y - bird.width, bird.width * 2, bird.width * 2);
     ctx.restore();
 }
 
@@ -92,10 +134,18 @@ function drawSling() {
     ctx.closePath();
 }
 
+function showLevel() {
+    ctx.font = '30px Arial';
+    ctx.fillStyle = 'black';
+    ctx.textAlign = 'center';
+    ctx.fillText(`Level: ${currentLevel}`, canvas.width / 2, 40);
+}
+
 function remainingStars() {
     ctx.font = '24px Arial';
     ctx.fillStyle = 'black';
-    ctx.fillText(`Stars Left: ${stars.length}`, 20, 40);
+    ctx.textAlign = 'center';
+    ctx.fillText(`Stars Left: ${stars.length}`, canvas.width / 2, 90);
 }
 
 function updateBird(bird) {
@@ -106,16 +156,16 @@ function updateBird(bird) {
         bird.x += bird.vx;
         bird.y += bird.vy;
 
-        if (bird.y + bird.radius > canvas.height) {
-            bird.y = canvas.height - bird.radius;
+        if (bird.y + bird.width > canvas.height) {
+            bird.y = canvas.height - bird.width;
             bird.vy = -bird.vy * friction;
         }
-        if (bird.x + bird.radius > canvas.width) {
-            bird.x = canvas.width - bird.radius;
+        if (bird.x + bird.width > canvas.width) {
+            bird.x = canvas.width - bird.width;
             bird.vx = -bird.vx * friction;
         }
-        if (bird.x - bird.radius < 0) {
-            bird.x = bird.radius;
+        if (bird.x - bird.width < 0) {
+            bird.x = bird.width;
             bird.vx = -bird.vx * friction;
         }
 
@@ -176,49 +226,50 @@ function updateStar(star) {
 
 function checkCollision(bird, target) {
     if (
-        bird.x + bird.radius > target.x &&
-        bird.x - bird.radius < target.x + target.width &&
-        bird.y + bird.radius > target.y &&
-        bird.y - bird.radius < target.y + target.height
+        bird.x + bird.width > target.x &&
+        bird.x - bird.width < target.x + target.width &&
+        bird.y + bird.width > target.y &&
+        bird.y - bird.width < target.y + target.height
     ) {
         target.color = 'black';
         target.isFalling = true; // Set target to start falling
         // Calculate impact force and apply to the target with further reduced speed
-        target.vx = (bird.vx * bird.radius / target.mass) * 0.01; // Adjusted multiplier
-        target.vy = (bird.vy * bird.radius / target.mass) * 0.01; // Adjusted multiplier
+        target.vx = (bird.vx * bird.width / target.mass) * 0.01; // Adjusted multiplier
+        target.vy = (bird.vy * bird.width / target.mass) * 0.01; // Adjusted multiplier
     }
 }
 
 function checkStarCollision(bird, star) {
     if (
-        bird.x + bird.radius > star.x &&
-        bird.x - bird.radius < star.x + star.width &&
-        bird.y + bird.radius > star.y &&
-        bird.y - bird.radius < star.y + star.height
+        bird.x + bird.width > star.x &&
+        bird.x - bird.width < star.x + star.width &&
+        bird.y + bird.width > star.y &&
+        bird.y - bird.width < star.y + star.height
     ) {
         star.fadeStarted = true;
     }
 }
 
-function restartGame() {
+function nextLevel() {
+    // Increment level
+
+    if(currentLevel<3){
+        currentLevel++;
+    }
+    else{
+        alert('Game completed')
+    }
+    
+
     // Reset birds
     birds = [];
     createBird();
 
-    // Reset stars
-    stars = [
-        { x: 1400, y: 450, width: 30, height: 30, opacity: 1, fadeStarted: false },
-        { x: 1350, y: 250, width: 30, height: 30, opacity: 1, fadeStarted: false },
-        { x: 1450, y: 300, width: 30, height: 30, opacity: 1, fadeStarted: false }
-    ];
+    // Reset stars with random positions and incremented count
+    stars = generateStars(currentLevel);
 
-    // Reset targets
-    targets = [
-        { x: 1500, y: 300, width: 50, height: 50, color: 'green', vx: 0, vy: 0, mass: 1, isFalling: false },
-        { x: 1300, y: 400, width: 50, height: 50, color: 'blue', vx: 0, vy: 0, mass: 1, isFalling: false },
-        { x: 1400, y: 250, width: 50, height: 50, color: 'yellow', vx: 0, vy: 0, mass: 1, isFalling: false },
-        { x: 1200, y: 330, width: 50, height: 50, color: 'orange', vx: 0, vy: 0, mass: 1, isFalling: false }
-    ];
+    // Reset targets with random positions and incremented count
+    targets = generateTargets(currentLevel);
 
     // Restart game loop
     gameLoop();
@@ -238,17 +289,23 @@ function gameLoop() {
     birds = birds.filter(bird => bird.opacity > 0); // Remove birds that have fully faded away
     stars = stars.filter(star => star.opacity > 0); // Remove stars that have fully faded away
 
-    // Draw remaining stars count
+
+    // show current level
+    showLevel();
+
+    // show remaining stars count
     remainingStars();
+
+    
 
     // Check if all stars have faded completely
     if (stars.length === 0) {
         // Delay showing the alert message by 1 second
         setTimeout(function () {
             // Alert the game win message
-            alert("Congratulations! You've won the game!");
-            // Restart the game
-            restartGame();
+            alert(`Congratulations! You've won the level ${currentLevel} game!`);
+            // next llevel 
+            nextLevel();
         }, 1000);
     } else {
         requestAnimationFrame(gameLoop);
@@ -260,10 +317,10 @@ canvas.addEventListener('mousedown', (e) => {
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;
     if (
-        mouseX > activeBird.x - activeBird.radius &&
-        mouseX < activeBird.x + activeBird.radius &&
-        mouseY > activeBird.y - activeBird.radius &&
-        mouseY < activeBird.y + activeBird.radius
+        mouseX > activeBird.x - activeBird.width &&
+        mouseX < activeBird.x + activeBird.width &&
+        mouseY > activeBird.y - activeBird.width &&
+        mouseY < activeBird.y + activeBird.width
     ) {
         activeBird.isDragging = true;
     }
@@ -290,6 +347,7 @@ canvas.addEventListener('mouseup', (e) => {
         // Adjust the multiplier (0.1) to control the velocity based on dragging distance
         const velocityMultiplier = 0.1 + distance * 0.001; // Increase velocity with dragging distance
 
+        
         // Calculate the velocity components based on the distance dragged
         const velX = distanceX * velocityMultiplier;
         const velY = distanceY * velocityMultiplier;

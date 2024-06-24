@@ -5,27 +5,13 @@ body {
     align-items: center;
     height: 100vh;
     margin: 0;
-    background-image: url(../images/background.webp);
     overflow-x: hidden;
     overflow-y: hidden;
 }
-/* 
-canvas {
-    border: 1px solid #000;
-    background-color: #fff;
-}
 
-#circle {
-    width: 50px;
-    height: 50px;
-    background-color: red;
-    border-radius: 50%; 
-    position: absolute;
-    left: 0;
-    cursor: grab;
-} */
 canvas {
     border: 1px solid black;
     display: block;
+    background-image: url(../images/background1.jpg);
     margin: 0 ;
 }
